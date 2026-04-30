@@ -1,4 +1,5 @@
 import os
+import sys
 
 def check():
     try:
@@ -39,22 +40,29 @@ modules = [
     'deep_translator',
     'sounddevice',
     'soundfile',
-    'regex',
     'psutil',
     'colorama',
     'pycryptodome',
-    'pexpect'
 ]
 
+if sys.platform != 'win32':
+    modules.append('pexpect')
+else:
+    modules.append('wexpect')
+
 def detect_os():
-    if os.path.exists("/data/data/com.termux/files/usr/bin/bash"):
-        return 1
+    if sys.platform == 'win32':
+        return 'windows'
+    elif os.path.exists("/data/data/com.termux/files/usr/bin/bash"):
+        return 'termux'
     else:
-        return 0
+        return 'linux'
 
 def up_package():
     os_type = detect_os()
-    if os_type == 1:
+    if os_type == 'windows':
+        print("[+] Windows detected — skipping system package manager (use pip only).")
+    elif os_type == 'termux':
         print("Detected Termux environment")
         for command in package_termux:
             print(f"Executing: {command}")
@@ -65,19 +73,21 @@ def up_package():
             print(f"Executing: {command}")
             os.system(command)
 
+def get_python_cmd():
+    if sys.platform == 'win32':
+        return 'python'
+    return 'python3' if mode == 1 else 'python'
+
 def pip_install(module_name, break_sys=False):
-    global mode
-    if mode == 1:
-        cmd = f"python3 -m pip install {module_name}"
-    else:
-        cmd = f"python -m pip install {module_name}"
+    py = get_python_cmd()
+    cmd = f"{py} -m pip install {module_name}"
     if break_sys:
         cmd += " --break-system-packages"
 
     print(f"Installing {module_name} {'(force)' if break_sys else ''} ...")
     result = os.system(cmd)
 
-    if result != 0 and not break_sys:
+    if result != 0 and not break_sys and sys.platform != 'win32':
         print(f"[!] Retrying {module_name} with --break-system-packages...")
         return pip_install(module_name, break_sys=True)
     return result
@@ -114,14 +124,20 @@ def main():
     else:
         print("[+] Skipping package update..")
 
-    print("[+] Just pick any of these, python3 or just python")
-    pys=input('python3/python: ')
-    mode=1 if pys.lower() == 'python3' else 0
+    if sys.platform == 'win32':
+        print("[+] Windows detected — using 'python' command")
+        mode = 0
+    else:
+        print("[+] Just pick any of these, python3 or just python")
+        pys = input('python3/python: ')
+        mode = 1 if pys.lower() == 'python3' else 0
+
     install_modules()
 
     print('='*4+'Starting KawaiiGPT'+'='*4)
+    py = get_python_cmd()
     if os.path.exists('kawai.py'):
-        os.system('python3 kawai.py') if mode == 1 else os.system('python kawai.py')
+        os.system(f'{py} kawai.py')
     else:
         print("[!] kawai.py not found. Please download it first.")
 

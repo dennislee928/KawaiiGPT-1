@@ -1,1 +1,4 @@
 /.vscode
+.env
+/.claude
+.chat_history
