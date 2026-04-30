@@ -1,0 +1,43 @@
+services:
+
+  # ── Open-source LLM server (free, runs locally) ──────────────────────────
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # GPU support (uncomment if you have an NVIDIA GPU + nvidia-container-toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ── KawaiiGPT chat app ────────────────────────────────────────────────────
+  chat:
+    build: .
+    stdin_open: true
+    tty: true
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      # To use Anthropic instead, set this and remove OLLAMA_HOST:
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # To use Groq (free tier) instead:
+      # - GROQ_API_KEY=${GROQ_API_KEY}
+
+volumes:
+  ollama_data:

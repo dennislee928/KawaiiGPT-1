@@ -1,4 +1,4 @@
-## KawaiiGPT
+## KawaiiGPT - MODIFIED BY Dennis (License declaired free of any usecase, just no warrantiy)
 
 <div align="center">
     <img src="kawaii.svg" width="50%" height="300%" />
