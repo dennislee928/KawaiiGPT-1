@@ -1,87 +1,165 @@
-## KawaiiGPT - MODIFIED BY Dennis (License declaired free of any usecase, just no warrantiy)
+# KawaiiGPT
+
+> Modified and maintained by [dennislee928](https://github.com/dennislee928).
+> Original project by MrSanZz — license declared free for any use case, no warranty.
 
 <div align="center">
-    <img src="kawaii.svg" width="50%" height="300%" />
+    <img src="kawaii.svg" width="50%" />
 </div>
 
-- THIS TOOLS HAS BEEN CLOSED FROM ADMIN, AND IT'S NOW OPEN SOURCE, USE IT FOR LEARNING!.
-> Forum: [Telegram](https://t.me/kawaiigpt_official)
+A terminal AI chat interface that works with multiple LLM providers — including free and fully local options.
 
-## Use (Linux Distro)
 ---
-``` bash
-apt-get update && apt-get upgrade (if not updated and upgraded)
-apt install python3 && apt install python3-pip
-apt install git
-git clone https://github.com/MrSanZz/KawaiiGPT
+
+## Quick Start
+
+### Option 1 — Groq (free API, fastest)
+
+1. Get a free API key at [console.groq.com](https://console.groq.com)
+2. Run:
+
+```powershell
+# Windows
+pip install -r requirements.txt
+$env:GROQ_API_KEY = "gsk_..."
+python chat.py
+```
+
+```bash
+# Linux / macOS
+pip install -r requirements.txt
+export GROQ_API_KEY="gsk_..."
+python chat.py
+```
+
+### Option 2 — Ollama in Docker (free, fully local, no API key)
+
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+docker-compose up
+# In a second terminal:
+docker attach kawaiigpt-chat-1
+```
+
+First run downloads Ollama and pulls `llama3.2` (~2 GB). Subsequent starts are instant.
+
+### Option 3 — Ollama without Docker
+
+1. Install Ollama from [ollama.com](https://ollama.com/download)
+2. Run:
+
+```bash
+ollama pull llama3.2
+python chat.py
+```
+
+### Option 4 — Claude (Anthropic API, paid)
+
+```bash
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY="sk-ant-..."
+python chat.py
+```
+
+---
+
+## Provider Auto-Detection
+
+`chat.py` picks the backend automatically based on which environment variable is set:
+
+| Priority | Variable | Provider | Cost |
+|---|---|---|---|
+| 1 | `ANTHROPIC_API_KEY` | Claude (Anthropic) | Paid |
+| 2 | `GROQ_API_KEY` | Groq | Free tier |
+| 3 | *(neither set)* | Ollama at `localhost:11434` | Free / local |
+
+---
+
+## Docker Architecture
+
+```
+docker-compose up
+│
+├── ollama (port 11434)
+│     └── runs llama3.2 locally, free
+│
+└── chat
+      └── chat.py → talks to Ollama via HTTP
+```
+
+To switch the Docker stack to a different model:
+
+```bash
+OLLAMA_MODEL=mistral docker-compose up
+```
+
+To use Groq inside Docker instead of Ollama, edit `docker-compose.yml`:
+
+```yaml
+environment:
+  - GROQ_API_KEY=gsk_...
+  # remove OLLAMA_HOST
+```
+
+---
+
+## Chat Commands
+
+| Command | Action |
+|---|---|
+| `exit` / `quit` | Quit |
+| `reset` | Clear conversation history |
+| `help` | Show commands |
+| Up arrow | Recall previous inputs |
+
+---
+
+## Installation (Windows)
+
+```powershell
+git clone https://github.com/dennislee928/KawaiiGPT
 cd KawaiiGPT
-python3 install.py
-python3 kawai.py
+pip install -r requirements.txt
+python chat.py
 ```
 
-## Use (Termux)
+## Installation (Linux / macOS)
 
-``` bash
-pkg update && pkg upgrade (if not updated and upgraded)
-pkg install python3
-pkg install git
-git clone https://github.com/MrSanZz/KawaiiGPT
+```bash
+git clone https://github.com/dennislee928/KawaiiGPT
 cd KawaiiGPT
-python3 install.py
-python3 kawai.py
-```
----
-- *Have fun! (support me with star ⭐ !!)*
-
-## Information
-
-KawaiiGPT uses a **reverse-engineered LLM API wrapper** original agents at:
-
-> [https://github.com/pollinations/pollinations](https://github.com/pollinations/pollinations)
-
-For the rest Back-End, it uses a server to serve other obtainable LLM such as DeepSeek, Gemini, or Kimi-K2
-
-## ⚠️ =Disclaimer=
->
-> * This project was made to be **fun**!
-> * All risks or consequences that you have done are **your own responsibility**.
-> * Changing or selling this tools is prohibited and not allowed!. ⚠
-> * Using a **prepared** model, **not** a fine-tuned model!
-> * All LLM here uses a prompt injection! (jailbreak has been written on help-menu)
-> * This is KawaiiGPT, not WormGPT, **made to be fun or companies!**
-> * WormGPT tag only **used for jailbreaked model**
----
-
-# QnA
-``` plain
-"Why is it obfuscated?"
-
-Me: Okay, many people asking this question, the reason why i obfuscate the
-    code is because I want to avoid recoding and renaming which ends up 
-    selling KawaiiGPT tools under my name and claiming that it belongs to them
-
-"This is obviously a virus or a RAT"
-
-Me: Seriously, i'm enough with this question over time. No, there is no RAT, Spyware,
-    Malware, Ransom, etc. Why would i do that? because it's free and obfuscated
-    doesn't mean i wanna trap you all, **i wouldn't**. If that wasn't from me
-    don't run it or you would fall in a trap. 
-
-"But why is it obfuscated?"
-
-Me: Like what i said earlier, "I want to avoid recoding and renaming which ends up 
-    selling KawaiiGPT tools under my name and claiming that it belongs to them".
-    Please understand that i wouldn't put a malicious code into my tools/code,
-    if somebody said "KawaiiGPT has a virus!!" in Telegram or other please don't
-    trust it, maybe they just want to bring down my name or they got the wrong KawaiiGPT
-    that is not from me.
+pip install -r requirements.txt
+python chat.py
 ```
 
-## Conclusion:
 ---
-I never put any malicious code or even malicious software into my code/tools
-if it's obfuscated that means I just want to avoid recoding and selling
---
 
-> Best regards, ```MrSanZz+Shoukaku07+FlamabyX5```
-Made with 🔥
+## Files
+
+| File | Purpose |
+|---|---|
+| `chat.py` | Main chat interface — multi-provider |
+| `docker-compose.yml` | Ollama + chat stack |
+| `Dockerfile` | Container definition for chat app |
+| `requirements.txt` | Python dependencies |
+| `kawai.py` | Original KawaiiGPT script (Linux/Android) |
+| `install.py` | Original installer (Linux/Android/Termux) |
+
+---
+
+## Recommended Free Models
+
+| Model | Provider | Good for |
+|---|---|---|
+| `llama3.2` | Ollama / Groq | General chat |
+| `llama-3.3-70b-versatile` | Groq | Complex reasoning |
+| `mistral` | Ollama | Fast, lightweight |
+| `gemma2` | Ollama | Google's open model |
+| `deepseek-r1:8b` | Ollama | Reasoning tasks |
+
+---
+
+## License
+
+Free for any use case. No warranty.
