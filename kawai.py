@@ -5,7 +5,14 @@ from os.path import exists
 import warnings, sys;warnings.filterwarnings("ignore");sys.stderr = open(os.devnull, "w")
 import random, hashlib
 import asyncio
-import pexpect
+import sys as _sys
+if _sys.platform == 'win32':
+    try:
+        import wexpect as pexpect
+    except ImportError:
+        pexpect = None
+else:
+    import pexpect
 import re, shutil
 import datetime
 from prompt_toolkit import PromptSession
@@ -1151,38 +1158,46 @@ def execute_ai_command_loop(initial_command_text):
             else:
                 pass
             print(f"\n[+] Executing: {current_command.replace('continue ', '').replace('break ', '')}\033[0m")
-            child = pexpect.spawn(wrap_if_shell_needed(current_command.replace('continue ', '').replace('break ', '')), encoding='utf-8', timeout=None)
-            child.logfile = sys.stdout
+            if pexpect is None:
+                import subprocess
+                result = subprocess.run(
+                    wrap_if_shell_needed(current_command.replace('continue ', '').replace('break ', '')),
+                    shell=True, text=True
+                )
+                full_output = ""
+            else:
+                child = pexpect.spawn(wrap_if_shell_needed(current_command.replace('continue ', '').replace('break ', '')), encoding='utf-8', timeout=None)
+                child.logfile = sys.stdout
 
-            full_output = ""
-            while True:
-                index = child.expect([
-                    r'.*\[\s*[Yy]/[Nn](?:/[Qq])?\s*\]',  # [y/N/q] / [Y/N] / [y/N]
-                    pexpect.EOF,
-                    pexpect.TIMEOUT
-                ])
+                full_output = ""
+                while True:
+                    index = child.expect([
+                        r'.*\[\s*[Yy]/[Nn](?:/[Qq])?\s*\]',  # [y/N/q] / [Y/N] / [y/N]
+                        pexpect.EOF,
+                        pexpect.TIMEOUT
+                    ])
 
-                full_output += child.before
-
-                if index == 0:
-                    prompt_text = child.after.strip()
-                    ai_prompt = f"""Tool is asking:\n{prompt_text}\n\nPlease respond with exactly one of: Y (yes), N (no), or Q (quit)."""
-                    decision_list = get_valid_response(ai_prompt, num=2)
-                    decision = ''.join(decision_list).strip().upper()
-
-                    if decision in ['Y', 'N', 'Q']:
-                        child.sendline(decision)
-                        if decision == 'Q':
-                            print("[!] AI choose to quit. Stopping chain.\033[0m")
-                            break
-                    else:
-                        child.sendline('N')
-                elif index == 1:  # EOF
                     full_output += child.before
-                    break
-                elif index == 2:  # TIMEOUT
-                    print("[!] Command timeout.")
-                    break
+
+                    if index == 0:
+                        prompt_text = child.after.strip()
+                        ai_prompt = f"""Tool is asking:\n{prompt_text}\n\nPlease respond with exactly one of: Y (yes), N (no), or Q (quit)."""
+                        decision_list = get_valid_response(ai_prompt, num=2)
+                        decision = ''.join(decision_list).strip().upper()
+
+                        if decision in ['Y', 'N', 'Q']:
+                            child.sendline(decision)
+                            if decision == 'Q':
+                                print("[!] AI choose to quit. Stopping chain.\033[0m")
+                                break
+                        else:
+                            child.sendline('N')
+                    elif index == 1:  # EOF
+                        full_output += child.before
+                        break
+                    elif index == 2:  # TIMEOUT
+                        print("[!] Command timeout.")
+                        break
 
             child.close()
 
